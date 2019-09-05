@@ -6,7 +6,7 @@ var runing = true;
 var trigger = true;
 var inUser = (Math.floor(Math.random() * 10000)) % 5 + 1;
 var num = 0;
-var Lotterynumber = 5; //设置单次点评人数
+var Lotterynumber = 5; //设置单次点名人数
 
 $(function () {
 	nametxt.css('background-image','url('+xinm[0]+')');
@@ -45,6 +45,7 @@ function startNum() {
 	num = Math.floor(Math.random() * pcount);
 	nametxt.css('background-image','url('+xinm[num]+')');
 	phonetxt.html(phone[num]);
+	console.log(text)
 	t = setTimeout(startNum, 0);
 }
 
@@ -93,7 +94,7 @@ function zd() {
 						$('.modality-list ul').append("<li><div class='luck-img' style='background-image:url("+xinm[num]+")'></div><p>"+phone[num]+"</p></li>");
 						
 						//增加选中的学生
-						
+						console.log(num);
 						//$('#rollcall').append("<input type='hidden' name='id[]' value='"+id[num]+"'/>");
 						$('#rollcall').append("<input type='hidden' name='id' value='"+id[num]+"'/><input type='hidden' name='username' value='"+phone[num]+"'/><input type='hidden' name='xuehao' value='"+xuehao[num]+"'/>");
 						//将已中奖者从数组中"删除",防止二次点名

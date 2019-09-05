@@ -24,17 +24,20 @@ import edu.gzhu.its.system.entity.User;
  * @author 丁国柱
  * @date 2018年3月6日 下午1:18:08
  */
+import edu.gzhu.its.system.service.IUserService;
 @Service("rollCallService")
 public class RollCallService extends BaseDAOImpl<RollCall, Integer> implements IRollCallService{
 
 	@Resource
 	private IRollCallInfoService callInfoService;
+	@Resource
+	private IUserService userService;
 	
 	private final static Logger logger = LoggerFactory.getLogger(RollCallService.class);
 
 	@Override
 	@Transactional
-	public void saveRollCall(String name, String[] userIds, String[] types) {
+	public void saveRollCall(String name, String[] xuehaos, String[] types) {
 		RollCall call = new RollCall();
 		call.setAddress("文逸楼254");
 		ClassInfo classInfo = new ClassInfo();
@@ -47,17 +50,14 @@ public class RollCallService extends BaseDAOImpl<RollCall, Integer> implements I
 		call.setDate(new Date());
 		this.save(call);
 		
-		for (int i = 0; i < userIds.length; i++) {
+		for (int i = 0; i < xuehaos.length; i++) {
 			RollCallInfo callInfo = new RollCallInfo();
 			callInfo.setType(Integer.parseInt(types[i]));
-			User user = new User();
-			user.setId(Long.parseLong(userIds[i]));
+			User user = this.userService.getUserByXuehao(xuehaos[i]);
 			callInfo.setUser(user);
 			callInfo.setRollCall(call);
 			this.callInfoService.save(callInfo);
 		}
 	}
-
-
 
 }

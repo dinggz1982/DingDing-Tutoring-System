@@ -25,7 +25,7 @@
     		<td colspan="2">
 				<select name="selectStu" id="selectStu"  onchange="selectStudent()">
 					<c:forEach var="student" items="${allStudents }">
-						<option value="${student[0] }">${student[1] }</option>
+						<option value="${student[0] }" label="${student[2] }">${student[1] }</option>
 					</c:forEach>
 				</select>    		
     		</td>
@@ -42,10 +42,10 @@
     
     <tbody id="stubody">
     	<c:forEach items="${users }" var="user" varStatus="status">
-    	<input type="hidden" name="id" value="${user.id }"/>
       <tr class="text-c">
+      	
         <td><u style="cursor:pointer" class="text-primary">${user.username }</u></td>
-        <td>${user.xuehao }</td>
+        <td>${user.xuehao }<input type="hidden" name="xuehao" value="${user.xuehao }"/></td>
         <td class="user-status">
         <!-- 1.上课 2.迟到  3.早退 4.请假   5.旷课-->
         <select class="select valid" size="1" name="type" data-filtered="filtered">
@@ -73,8 +73,9 @@
 <script type="text/javascript">
 function selectStudent(){
 	var s1 = $('#selectStu').val();
-var s2 = $('#selectStu option:selected').text();
-$('#stubody').append("<tr class='text-c'><input type='hidden' name='id' value='"+s1+"'/><td><u style='cursor:pointer' class='text-primary'>"+s2+"</u></td><td>"+111+"</td><td class='user-status'><select class='select valid' size='1' name='type' data-filtered='filtered'><option value='1' data-filtered='filtered'>上课</option><option value='2' data-filtered='filtered'>迟到</option><option value='3' data-filtered='filtered'>早退</option><option value='4' data-filtered='filtered'>请假</option><option value='5' data-filtered='filtered'>旷课</option></select></td></tr>").show();
+	var s3 = $('#selectStu option:selected').attr("label");
+	var s2 = $('#selectStu option:selected').text();
+	$('#stubody').append("<tr class='text-c'><input type='hidden' name='xuehao' value='"+s3+"'/><td><u style='cursor:pointer' class='text-primary'>"+s2+"</u></td><td>"+s3+"</td><td class='user-status'><select class='select valid' size='1' name='type' data-filtered='filtered'><option value='1' data-filtered='filtered'>上课</option><option value='2' data-filtered='filtered'>迟到</option><option value='3' data-filtered='filtered'>早退</option><option value='4' data-filtered='filtered'>请假</option><option value='5' data-filtered='filtered'>旷课</option></select></td></tr>").show();
 }
 </script>
   </body>

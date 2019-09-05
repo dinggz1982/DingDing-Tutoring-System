@@ -96,22 +96,18 @@ clear:both;
 		</div>
 	</div>
 		<input type="hidden" id="cango" name="cango" value="0">
-	
 	<script src="${ctx }/static/rollcall/js/jquery-2.2.1.min.js"
 		type="text/javascript"></script>
 	<div style="text-align:center;"></div>
 	
-	
 	<script type="text/javascript">
-
              var arrList = new Array();   
-
             // arrList = "${users}".replace('[','').replace(']','').split(',');   
 
-			 arrList = eval(${users});
+			// arrList = eval(${users});
 			
-             //console.log(arrList[0]);   
-             
+           // console.log(arrList[0]);   
+             //id,username,xuehao,img
              var xinm = new Array();
              
              xinm = eval(${imgs});

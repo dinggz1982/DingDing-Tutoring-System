@@ -78,6 +78,9 @@ public class RollCallController {
 			imgs.add(objects[3].toString());
 		}
 		
+		Gson g1 = new Gson();
+		String usersjson = g1.toJson(users);
+		model.addAttribute("users", usersjson);
 		
 		Gson g = new Gson();
 		String json1 = g.toJson(ids);
@@ -103,7 +106,7 @@ public class RollCallController {
 		String[] username = request.getParameterValues("username");
 
 		List<User> users = new ArrayList<User>();
-		for (int i = 0; i < xuehao.length; i++) {
+		for (int i = xuehao.length-1; i >=0 ; i--) {
 			User user = new User();
 			user.setId(Long.parseLong(id[i].toString()));
 			user.setUsername(username[i]);
@@ -111,7 +114,7 @@ public class RollCallController {
 			users.add(user);
 		}
 		model.addAttribute("users", users);
-		List<Object[]> allStudents = this.userService.findByNaviteSql("select id,username from sys_user where class_id=1");
+		List<Object[]> allStudents = this.userService.findByNaviteSql("select id,username,xuehao from sys_user where class_id=1");
 		model.addAttribute("allStudents", allStudents);
 
 		return "study/submitRollCall";
@@ -132,10 +135,10 @@ public class RollCallController {
 		
 		String name = request.getParameter("name");
 		
-		String[] userIds= request.getParameterValues("id");
+		String[] xuehaos= request.getParameterValues("xuehao");
 
 		String[] types = 	request.getParameterValues("type");
-		rollCallService.saveRollCall(name, userIds, types);
+		rollCallService.saveRollCall(name, xuehaos, types);
 		
 		return "study/submitRollCallSuccess";
 	}

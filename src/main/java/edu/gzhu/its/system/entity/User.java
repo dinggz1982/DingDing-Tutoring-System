@@ -105,7 +105,7 @@ public class User implements java.io.Serializable {
 	@Column(columnDefinition = "varchar(255) comment '民族'")
 	private String ethnicity;
 	
-	@Column(columnDefinition = "varchar(255) comment '学号'")
+	@Column(columnDefinition = "varchar(255) comment '学号'",unique=true)
 	private String xuehao;
 	
 	public String getEthnicity() {

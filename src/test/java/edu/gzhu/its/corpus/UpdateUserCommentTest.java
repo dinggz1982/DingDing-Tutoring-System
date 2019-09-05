@@ -1,5 +1,6 @@
 package edu.gzhu.its.corpus;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,7 +44,13 @@ public class UpdateUserCommentTest {
 		 * }
 		 */
 
-		List<UserComment> comments = this.userCommentService.find(" where isAnnotationed=0");
+		List<UserComment> comments = null;
+		try {
+			comments = this.userCommentService.findAll();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		for (Iterator iterator2 = comments.iterator(); iterator2.hasNext();) {
 			UserComment comment = (UserComment) iterator2.next();
 

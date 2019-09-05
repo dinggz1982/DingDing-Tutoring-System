@@ -33,5 +33,12 @@ public interface IUserService extends BaseService<User, Long>{
 	 * @return
 	 */
 	public int getUserCount();
+	
+	/**
+	 * 根据学号获取学生
+	 * @param xuehao
+	 * @return
+	 */
+	public User getUserByXuehao(String xuehao);
 
 }
