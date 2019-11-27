@@ -273,4 +273,16 @@ public interface BaseService<T,ID extends Serializable> {
      * @return
      */
     public int executeSql(String sql);
+    
+    /**
+     * 分页中加入个性化排序
+     * @param page
+     * @param pageSize
+     * @param hql
+     * @param order
+     * @return
+     */
+    public PageData<T> getPageData(int page, int pageSize, String hql, String order);
+
+    public PageData<Object[]> getDataByPrototypicalSQL(int pageIndex, int pageSize, String sql, String countSql);
 }

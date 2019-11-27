@@ -1,14 +1,20 @@
 package edu.gzhu.its.qa.web;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.ansj.domain.Result;
+import org.ansj.domain.Term;
+import org.ansj.splitWord.analysis.NlpAnalysis;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.QueryExecution;
@@ -16,9 +22,9 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.tdb.TDBFactory;
+import org.nlpcn.commons.lang.tire.domain.Forest;
+import org.nlpcn.commons.lang.tire.library.Library;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,11 +34,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import edu.gzhu.its.qa.entity.RoadDisease;
 import edu.gzhu.its.qa.model.Entity;
 import edu.gzhu.its.qa.model.QaIntent;
+import edu.gzhu.its.qa.service.IRoadDiseaseService;
 import edu.gzhu.its.qa.service.ITDBReadService;
 import edu.gzhu.its.qa.utils.QaUtils;
+import edu.gzhu.its.system.entity.Role;
 import edu.gzhu.its.system.entity.User;
+import edu.gzhu.its.system.service.IRoleService;
 
 /**
  * 前端控制器
@@ -51,6 +61,10 @@ public class QaController {
 
 	@Autowired
 	private ITDBReadService tdbReadService;
+	@Autowired
+	private IRoleService roleService;
+	@Autowired
+	private IRoadDiseaseService roadDiseaseService;
 
 	/**
 	 * 增加意图
@@ -148,7 +162,7 @@ public class QaController {
 	@GetMapping("/answer")
 	@ResponseBody
 	public Map<String, Object> answer(String toId, String sentId, String content)
-			throws ClientProtocolException, IOException {
+			throws ClientProtocolException, IOException, SQLException {
 		String subject = "";
 		String predicate = "";
 		String result = "";
@@ -178,172 +192,258 @@ public class QaController {
 				map.put("timestamp", new Date().getTime());
 				break;
 			}
-			
+
 		}
 		// 诗词
 		else if (toId.equals("10001")) {
-			QaIntent intent = QaUtils.getResult(content);
 
-			String intentInfo = intent.getIntent();
+			Forest forest = null;
+			boolean isDiserse = false;
+			try {
+				forest = Library.makeForest(QaController.class.getResourceAsStream("/library/userLibrary.dic"));// 加载字典文件
+				Result fenciresult = NlpAnalysis.parse(content, forest);// 传入forest
+				List<Term> termList = fenciresult.getTerms();
+				for (Term term : termList) {
+					// System.out.println(term.getName()+":"+term.getNatureStr());
+					String info = term.getName();
+					if (Arrays.asList(diseases).contains(info)) {
+						isDiserse = true;
+						RoadDisease disease = new RoadDisease();
+						disease.setDate(new Date());
+						disease.setDisease(info);
+						disease.setUser("录入人员");
+						disease.setPositionX(0f);
+						disease.setPositionY(0f);
+						this.roadDiseaseService.save(disease);
+						map.put("content", "录入成功！a(/roadDiserse/list)[道路病害列表]");
+						map.put("timestamp", new Date().getTime());
+						break;
+					}
 
-			String filePath = "E:\\Intelligent Tutoring System\\Intelligent-Tutoring-System\\src\\main\\resources\\tdb";
-			Dataset dataset = TDBFactory.createDataset(filePath);
-			Model model = dataset.getDefaultModel();
-			List<Entity> entities = intent.getEntities();
-			String queryInfo = "";
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-			switch (intentInfo) {
-			case "greet":
-				int hellosrandom = (int) (Math.random() * hellos.length);
-				map.put("content", hellos[hellosrandom]);
-				map.put("timestamp", new Date().getTime());
-				break;
-			case "goodbye":
-				int byesrandom = (int) (Math.random() * byes.length);
-				map.put("content", byes[byesrandom]);
-				map.put("timestamp", new Date().getTime());
-				break;
-			// 问诗人
-			case "poet":
-				// 获取诗人实体
-				if (entities != null && entities.size() > 0) {
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = entities.get(i);
-						if (entity.getEntity().equals("poet")) {
-							String sparql = "SELECT  ?o WHERE { <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#"
-									+ entity.getValue() + "> <http://lcell.bnu.edu.cn/owl/property#description> ?o }";
+			if (!isDiserse) {
+				QaIntent intent = QaUtils.getResult(content);
+
+				String intentInfo = intent.getIntent();
+
+				String filePath = "E:\\Intelligent Tutoring System\\Intelligent-Tutoring-System\\src\\main\\resources\\tdb";
+				Dataset dataset = TDBFactory.createDataset(filePath);
+				Model model = dataset.getDefaultModel();
+				List<Entity> entities = intent.getEntities();
+				String queryInfo = "";
+
+				switch (intentInfo) {
+				case "greet":
+					int hellosrandom = (int) (Math.random() * hellos.length);
+					map.put("content", hellos[hellosrandom]);
+					map.put("timestamp", new Date().getTime());
+					break;
+				case "goodbye":
+					int byesrandom = (int) (Math.random() * byes.length);
+					map.put("content", byes[byesrandom]);
+					map.put("timestamp", new Date().getTime());
+					break;
+				// 问诗人
+				case "poet":
+					// 获取诗人实体
+					if (entities != null && entities.size() > 0) {
+						for (int i = 0; i < entities.size(); i++) {
+							Entity entity = entities.get(i);
+							if (entity.getEntity().equals("poet")) {
+								String sparql = "SELECT  ?o WHERE { <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#"
+										+ entity.getValue()
+										+ "> <http://lcell.bnu.edu.cn/owl/property#description> ?o }";
+								ResultSet resultSet = selectQuery(model, sparql);
+								String returnContent = "";
+								while (resultSet.hasNext()) {
+									QuerySolution querySolution = resultSet.next();
+									result = querySolution.get("?o").toString();
+									returnContent = result + "\n" + returnContent;
+								}
+								map.put("content", returnContent);
+								map.put("timestamp", new Date().getTime());
+								dataset.close();
+								return map;
+							}
+						}
+					}
+
+					break;
+				case "poetry":
+					// 问诗
+					if (entities != null && entities.size() > 0) {
+						for (int i = 0; i < entities.size(); i++) {
+							Entity entity = entities.get(i);
+							if (entity.getEntity().equals("poet")) {
+								String sparql = "SELECT  ?o WHERE { <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#"
+										+ entity.getValue()
+										+ "> <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#创作> ?o }";
+								ResultSet resultSet = selectQuery(model, sparql);
+								String returnContent = entity.getValue() + "的作品有：";
+
+								while (resultSet.hasNext()) {
+									QuerySolution querySolution = resultSet.next();
+									result = querySolution.get("?o").toString();
+									returnContent = returnContent + getIRIName(result) + "\n";
+								}
+								map.put("content", returnContent);
+								map.put("timestamp", new Date().getTime());
+								dataset.close();
+								return map;
+							}
+						}
+					}
+					break;
+				case "ask":
+					// 问诗
+					if (entities != null && entities.size() > 0) {
+						String subject1 = "";
+						String object1 = "";
+						for (int i = 0; i < entities.size(); i++) {
+							Entity entity = entities.get(i);
+
+							if (entity.getEntity().equals("poet")) {
+								subject1 = "<http://lcell.bnu.edu.cn/ontologies/chinese/poetry#" + entity.getValue()
+										+ ">";
+							}
+							if (entity.getEntity().equals("poetry")) {
+								object1 = "<http://lcell.bnu.edu.cn/ontologies/chinese/poetry#" + entity.getValue()
+										+ ">";
+
+							}
+						}
+						if (subject1.length() > 0 && object1.length() > 0) {
+							String sparql = "select (COUNT(*) AS ?count) {" + subject1
+									+ " <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#创作> " + object1 + "}";
+							ResultSet resultSet = selectQuery(model, sparql);
+							int count = resultSet.next().getLiteral("?count").getInt();
+							if (count > 0) {
+								map.put("content", "是的");
+								map.put("timestamp", new Date().getTime());
+							} else {
+								map.put("content", "不是");
+								map.put("timestamp", new Date().getTime());
+							}
+						} else {
+							map.put("content", "知识储备不足，暂时无法判断！");
+							map.put("timestamp", new Date().getTime());
+						}
+						dataset.close();
+						return map;
+
+					}
+
+					break;
+				case "who":
+					// 问诗
+					if (entities != null && entities.size() > 0) {
+						String subject1 = "";
+						String object1 = "";
+						for (int i = 0; i < entities.size(); i++) {
+							Entity entity = entities.get(i);
+							if (entity.getEntity().equals("poetry")) {
+								object1 = "<http://lcell.bnu.edu.cn/ontologies/chinese/poetry#" + entity.getValue()
+										+ ">";
+							}
+						}
+						if (object1.length() > 0) {
+							String sparql = "select ?s WHERE {?s <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#创作> "
+									+ object1 + "}";
 							ResultSet resultSet = selectQuery(model, sparql);
 							String returnContent = "";
-							while (resultSet.hasNext()) {
-								QuerySolution querySolution = resultSet.next();
-								result = querySolution.get("?o").toString();
-								returnContent = result + "\n" + returnContent;
-							}
-							map.put("content", returnContent);
-							map.put("timestamp", new Date().getTime());
-							dataset.close();
-							return map;
-						}
-					}
-				}
-
-				break;
-			case "poetry":
-				// 问诗
-				if (entities != null && entities.size() > 0) {
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = entities.get(i);
-						if (entity.getEntity().equals("poet")) {
-							String sparql = "SELECT  ?o WHERE { <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#"
-									+ entity.getValue()
-									+ "> <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#创作> ?o }";
-							ResultSet resultSet = selectQuery(model, sparql);
-							String returnContent = entity.getValue() + "的作品有：";
 
 							while (resultSet.hasNext()) {
 								QuerySolution querySolution = resultSet.next();
-								result = querySolution.get("?o").toString();
+								result = querySolution.get("?s").toString();
 								returnContent = returnContent + getIRIName(result) + "\n";
 							}
+
 							map.put("content", returnContent);
 							map.put("timestamp", new Date().getTime());
-							dataset.close();
-							return map;
-						}
-					}
-				}
-				break;
-			case "ask":
-				// 问诗
-				if (entities != null && entities.size() > 0) {
-					String subject1 = "";
-					String object1 = "";
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = entities.get(i);
 
-						if (entity.getEntity().equals("poet")) {
-							subject1 = "<http://lcell.bnu.edu.cn/ontologies/chinese/poetry#" + entity.getValue() + ">";
-						}
-						if (entity.getEntity().equals("poetry")) {
-							object1 = "<http://lcell.bnu.edu.cn/ontologies/chinese/poetry#" + entity.getValue() + ">";
-
-						}
-					}
-					if (subject1.length() > 0 && object1.length() > 0) {
-						String sparql = "select (COUNT(*) AS ?count) {" + subject1
-								+ " <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#创作> " + object1 + "}";
-						ResultSet resultSet = selectQuery(model, sparql);
-						int count = resultSet.next().getLiteral("?count").getInt();
-						if (count > 0) {
-							map.put("content", "是的");
-							map.put("timestamp", new Date().getTime());
 						} else {
-							map.put("content", "不是");
+							map.put("content", "知识储备不足，暂时无法判断！");
 							map.put("timestamp", new Date().getTime());
 						}
-					} else {
-						map.put("content", "知识储备不足，暂时无法判断！");
-						map.put("timestamp", new Date().getTime());
+						dataset.close();
+						return map;
 					}
-					dataset.close();
-					return map;
-
-				}
-
-				break;
-			case "who":
-				// 问诗
-				if (entities != null && entities.size() > 0) {
-					String subject1 = "";
-					String object1 = "";
-					for (int i = 0; i < entities.size(); i++) {
-						Entity entity = entities.get(i);
-						if (entity.getEntity().equals("poetry")) {
-							object1 = "<http://lcell.bnu.edu.cn/ontologies/chinese/poetry#" + entity.getValue() + ">";
-						}
-					}
-					if (object1.length() > 0) {
-						String sparql = "select ?s WHERE {?s <http://lcell.bnu.edu.cn/ontologies/chinese/poetry#创作> " + object1
-								+ "}";
-						ResultSet resultSet = selectQuery(model, sparql);
-						String returnContent = "";
-
-						while (resultSet.hasNext()) {
-							QuerySolution querySolution = resultSet.next();
-							result = querySolution.get("?s").toString();
-							returnContent = returnContent + getIRIName(result) + "\n";
-						}
-
-						map.put("content", returnContent);
-						map.put("timestamp", new Date().getTime());
-
-					} else {
-						map.put("content", "知识储备不足，暂时无法判断！");
-						map.put("timestamp", new Date().getTime());
-					}
-					dataset.close();
-					return map;
-				}
-				break;
+					break;
 				// 导航【 模块，哦
-			case "navigation":
-				if (entities != null && entities.size() > 0) {
-					
-					map.put("content", "导航信息不齐！");
-					map.put("timestamp", new Date().getTime());
-					return map;
-				}
-				else{
-					map.put("content", "导航信息不齐！");
-					map.put("timestamp", new Date().getTime());
-				}
-				break;
-			default:
-				break;
-			}
-		
-		}
+				case "navigation":
+					if (entities != null && entities.size() > 0) {
 
+						Entity siteEntity = entities.get(0);
+						String value = siteEntity.getValue();
+						switch (value) {
+						case "百度":
+							map.put("content", "正在为您导航到a(http://www.baidu.com)[百度]");
+							map.put("timestamp", new Date().getTime());
+							break;
+						case "新浪":
+							map.put("content", "正在为您导航到a(http://www.sina.com)[新浪]");
+							map.put("timestamp", new Date().getTime());
+							break;
+						case "网易":
+							map.put("content", "正在为您导航到a(http://www.163.com)[网易]");
+							map.put("timestamp", new Date().getTime());
+							break;
+						case "用户":
+							map.put("content", "正在为您导航到a(/user/list)[用户列表]");
+							map.put("timestamp", new Date().getTime());
+							break;
+						case "角色":
+							map.put("content", "正在为您导航到a(/role/list)[角色列表]");
+							map.put("timestamp", new Date().getTime());
+							break;
+						case "学校":
+							map.put("content", "正在为您导航到a(/school/list)[学校管理]");
+							map.put("timestamp", new Date().getTime());
+							break;
+						default:
+							break;
+						}
+
+						return map;
+					}
+				case "system_info":
+					if (entities != null && entities.size() > 0) {
+
+						Entity siteEntity = entities.get(0);
+						String value = siteEntity.getValue();
+						switch (value) {
+						case "角色":
+							List<Role> roles = this.roleService.findAll();
+							String roleString = "";
+							for (Iterator iterator = roles.iterator(); iterator.hasNext();) {
+								Role role = (Role) iterator.next();
+								roleString = roleString + role.getName() + ",";
+							}
+							map.put("content", "您好，本系统角色有：" + roleString);
+							map.put("timestamp", new Date().getTime());
+							break;
+						default:
+							break;
+						}
+
+						return map;
+					}
+
+					else {
+						map.put("content", "导航信息不齐！");
+						map.put("timestamp", new Date().getTime());
+					}
+					break;
+				default:
+					break;
+				}
+
+			}
+		}
 		return map;
 	}
 
@@ -372,4 +472,16 @@ public class QaController {
 	public String getIRIName(String iri) {
 		return iri.substring(iri.lastIndexOf("#") + 1, iri.length());
 	}
+
+	public static String[] diseases = { "破碎板", "裂缝", "板角断裂", "错台", "唧泥", "边角剥落", "接缝料损坏", "坑洞", "拱起", "露骨", "修补", "龟裂", "块状裂缝",
+			"横向裂缝", "坑槽", "松散", "沉陷", "车辙", "波浪拥包", "泛油" };
+	
+	public static void main(String[] args) {
+		String[] diseases1 = { "破碎板", "裂缝", "板角断裂", "错台", "唧泥", "边角剥落", "接缝料损坏", "坑洞", "拱起", "露骨", "修补", "龟裂", "块状裂缝",
+				"横向裂缝", "坑槽", "松散", "沉陷", "车辙", "波浪拥包", "泛油" };
+		System.out.println(Arrays.asList(diseases).contains("12312"));
+		System.out.println(Arrays.asList(diseases).contains("泛油"));
+
+	}
+
 }

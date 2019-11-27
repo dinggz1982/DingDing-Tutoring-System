@@ -2,22 +2,14 @@ package edu.gzhu.its.system.web;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,9 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import edu.gzhu.its.base.model.PageData;
 import edu.gzhu.its.base.model.TableSplitResult;
-import edu.gzhu.its.base.util.TagUtils;
 import edu.gzhu.its.base.util.UploadUserUtils;
-import edu.gzhu.its.experiment.entity.Word;
 import edu.gzhu.its.system.entity.Resource;
 import edu.gzhu.its.system.entity.ResourceButton;
 import edu.gzhu.its.system.entity.User;

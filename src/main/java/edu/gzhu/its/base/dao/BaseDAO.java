@@ -309,5 +309,33 @@ public interface BaseDAO<T,ID extends Serializable> {
      * @return
      */
     public int executeSql(String sql);
+    
+    /**
+     * 按照order分页
+     * @param page
+     * @param pageSize
+     * @param hql
+     * @param order
+     * @return
+     */
+    public PageData<T> getPageData(int page, int pageSize, String hql,String order); 
 	
+    
+    /**
+	 * 使用原生sql查询，返回数组对象
+	 * @param sql
+	 * start 开始数据 size获得多少条数据
+	 * @return
+	 */
+	public PageData getDataByPrototypicalSQL(int pageIndex, int pageSize,
+			final String sql, final String countSql) ;
+
+	public int queryPageTotalCountByPrototypicalSQLCount(String sql) ;
+	
+	public List<T> queryPageDataByPrototypicalSQL(int start, int maxSize, String sql) ;
+	
+	public List queryPageListByPrototypicalSQL(final String sql) ;
+	
+	public List queryPageListByPrototypicalSQL(String sql, int start, int maxSize)  ;
+	public Long queryPageTotalCountByPrototypicalSQL(final String sql) ;
 }

@@ -38,7 +38,7 @@ public class TermTest {
 	        Forest forest = null;
 	        try {
 	            forest=Library.makeForest(TermTest.class.getResourceAsStream("/library/userLibrary.dic"));//加载字典文件
-	            String str = "糟报自恶言阿斯达岁的啊as的撒旦撒大苏打撒旦撒打算";
+	            String str = "这里有接缝料损坏";
 	            Result result=NlpAnalysis.parse(str,forest);//传入forest
 	            List<Term> termList=result.getTerms();
 	            for(Term term:termList){

@@ -214,6 +214,16 @@
 							</div>
 						</div>
 					</div>
+					<div class="col" style="margin-bottom: 10px;">
+						<div class="card" style="width: 200px;height: 180px;">
+							<div class="card-body">
+								<a href="/ko/index" class="card-link">
+									<h4 class="card-title">知识建构实验</h4>
+									<p class="card-text">将认知计算融入知识建构</p>
+								</a>
+							</div>
+						</div>
+					</div>
 				</div>
 				
 	</div>

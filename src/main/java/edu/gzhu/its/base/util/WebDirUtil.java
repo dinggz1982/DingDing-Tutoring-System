@@ -17,6 +17,12 @@ public class WebDirUtil {
 		return name.substring(0, name.indexOf("/WEB-INF"));
 	}
 	
+	public String getWebDirByClass() {
+		URL currentUrl = this.getClass().getResource("WebDirUtil.class");
+		String name = currentUrl.getFile();
+		return name.substring(0, name.indexOf("/classes"));
+	}
+	
 	public String getWebRootDir() {
 		URL currentUrl = this.getClass().getResource("WebDirUtil.class");
 		String name = currentUrl.getFile();

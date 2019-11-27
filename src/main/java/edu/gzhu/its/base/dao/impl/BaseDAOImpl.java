@@ -515,4 +515,77 @@ public class BaseDAOImpl<T, ID extends Serializable> implements BaseDAO<T, ID> {
 		entityManager.clear();
 		
 	}
+
+	@Override
+	public PageData<T> getPageData(int page, int pageSize, String hql, String order) {
+		// 创建一个pagedata
+				PageData<T> pageData = new PageData<T>(page, pageSize);
+
+				// 求得总记录
+				int totalCount = this.count(hql);
+				pageData.setTotalCount(totalCount);
+				pageData.setPageData(this.getPageList(page, pageSize, hql+order));
+
+				return pageData;
+	}
+	
+	@Override
+	public PageData getDataByPrototypicalSQL(int pageIndex, int pageSize, String sql, String countSql)
+			 {
+		PageData<T> pageData = new PageData<T>(pageIndex, pageSize);
+		int totalCount = this.queryPageTotalCountByPrototypicalSQLCount(countSql);
+		List<T> list = this.queryPageDataByPrototypicalSQL(pageData.getStartRow(), pageSize, sql);
+		pageData.setTotalCount(totalCount);
+		pageData.setPageData(list);
+		return pageData;
+	}
+	
+	@Override
+	public int queryPageTotalCountByPrototypicalSQLCount(String sql)  {
+		return queryPageTotalCountByPrototypicalSQL(sql).intValue();
+	}
+
+	public List<T> queryPageDataByPrototypicalSQL(int start, int maxSize, String sql)  {
+		return this.queryPageListByPrototypicalSQL(sql, start, maxSize);
+	}
+
+	@Override
+	public List queryPageListByPrototypicalSQL(final String sql)  {
+		List<T> list = null;
+		try {
+			Query query = entityManager.createNativeQuery(sql);
+			// System.out.println(sql);
+			// 用于分页查询
+			list = query.getResultList();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	@Override
+	public List queryPageListByPrototypicalSQL(String sql, int start, int maxSize)  {
+		List<T> list = null;
+		Query query = entityManager.createNativeQuery(sql);
+		// System.out.println(sql);
+		// 用于分页查询
+		if (maxSize != 0) {
+			query.setFirstResult(start);
+			query.setMaxResults(maxSize);
+		}
+		list = query.getResultList();
+		return list;
+	}
+
+	@Override
+	public Long queryPageTotalCountByPrototypicalSQL(final String sql)  {
+
+		long size = 0l;
+		try {
+			Query query = entityManager.createNativeQuery(sql);
+			size = Long.parseLong(query.getSingleResult().toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return size;
+	}
 }
